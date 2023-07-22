@@ -3,7 +3,7 @@ from pygame.locals import *
 from threading import Thread
 import time
 
-#-----CONSTANTES-----
+#-----CONSTANTS-----
 WIDTH = 600
 HEIGHT = 600
 FPS = 60
@@ -14,6 +14,7 @@ pygame.init()
 
 
 
+# Main class
 class Water:
     def __init__(self):
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -49,7 +50,7 @@ class Water:
 
                 if event.type == MOUSEBUTTONDOWN:
                     pos = pygame.mouse.get_pos() # NOTA: em vez de utilizar a posição do rato utilizar um objeto em queda
-                    self.start_index = int(pos[0] / self.spring_width)
+                    self.start_index = pos[0] // self.spring_width
                     self.start_waves()
             
             self.draw_level()
@@ -66,7 +67,7 @@ class Water:
 
     def start_waves(self):
         self.springs[self.start_index].speed = self.initial_speed
-        self.updates = Update_Control(self.springs)
+        self.updates = Update_Control(self.springs, self.start_index)
         self.updates.daemon = True
         self.updates.start()
     
@@ -75,6 +76,7 @@ class Water:
 
 
 
+# Handles the springs calculations
 class Springs:
     def __init__(self, x, target_height, spring_width):
         self.x = x
@@ -89,26 +91,28 @@ class Springs:
         self.wave_height = self.height - target_height
         self.speed += - tension * self.wave_height - self.speed * dampening # NOTA: diferenciar acelaração e velocidade e calcular a velocidade
         self.height += self.speed # NOTA: aqui é aceleração
+        # print(f"speed = {self.speed} // height = {self.height}")
     
-
-
     def draw_springs(self, screen):
         pygame.draw.line(screen, WATER_COLOR, (self.x, self.height), (self.x, self.bottom_y), self.spring_width)
 
 
 
+# Handles all the updates
 class Update_Control(Thread): # Update_Control inherits the functionalities of Thread
-    def __init__(self, springs):
+    def __init__(self, springs, start_index):
         Thread.__init__(self) # Iniciates the inherited properties
-        self.springs = springs # NOTA: springs é a lista de springs pois é a referência para a class Springs
+        self.springs = springs
+        self.start_index = start_index
 
         self.target_height = HEIGHT // 2
 
-        self.springs_tension = 0.025 # Testing Value
-        self.springs_dampening = 0.020 # Testing value
+        self.springs_tension = 0.025
+        self.springs_dampening = 0.020
 
-        self.spread_speed = 0.25 # Testing Value # NOTA: Calcular em relação à força (isto é aceleração)
+        self.spread_speed = 0.25 # NOTA: Calcular em relação à força (isto é aceleração)
 
+        self.stopping = True
     def spring_update(self):
         for i in range(len(self.springs)):
             self.springs[i].hooke_law(self.target_height, self.springs_tension, self.springs_dampening)
@@ -137,13 +141,18 @@ class Update_Control(Thread): # Update_Control inherits the functionalities of T
                     self.springs[i + 1].height += self.rDeltas[i]
     
     def stop(self):
-        for i in range(len(self.springs)):
-            self.springs[i].speed = 0
-            self.springs[i].height = self.target_height
-            self.springs[i].wave_height = 0
+        while self.stopping:
+            for i in range(len(self.springs)):
+                self.springs[i].speed = 0
+                self.springs[i].height = self.target_height
+                self.springs[i].wave_height = 0
+                time.sleep(0.01)
+
+                if i == len(self.springs):
+                    self.stopping = False
 
     def run(self): # One of the property methods inherited by Thread
-        while True: # Since it will be used as daemon it won't be necessary the loop management
+        while self.stopping: # Since it will be used as daemon it won't be necessary the loop management
             self.spring_update()
             self.neighbor_list()
             self.neighbor_update()
@@ -153,7 +162,8 @@ class Update_Control(Thread): # Update_Control inherits the functionalities of T
                 if not int(self.springs[i].speed) and not int(self.springs[i].wave_height):
                     count += 1
             if count == len(self.springs):
-                self.stop()
+                self.start_index = Thread(target=self.stop)
+                self.start_index.start()
         
             time.sleep(0.01)
 
