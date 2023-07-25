@@ -1,4 +1,4 @@
-![banner](Wave_Simulator.png)
+![banner](wave_simulator_banner.png)
 
 This is a simple `Wave Simulator` written in python.
 
