@@ -3,12 +3,12 @@ from pygame.locals import *
 from threading import Thread
 import time
 
-# -----CONSTANTS-----
+#-----CONSTANTS-----
 WIDTH = 600
 HEIGHT = 600
 FPS = 60
 WATER_COLOR = (0, 106, 255)
-SCREEN_COLOR = (32, 32, 32)
+SCREEN_COLOR = (44, 39, 39)
 
 
 # Main class
@@ -21,7 +21,7 @@ class Water:
 
         self.target_height = HEIGHT // 2
 
-        self.initial_speed = 200  # NOTA: Passar a ser calculada em relação à massa e altura de lançamento do objeto
+        self.initial_speed = 300
 
         self.x_origin = 0
         self.x_end = WIDTH
@@ -45,12 +45,13 @@ class Water:
                     exit()
 
                 if event.type == MOUSEBUTTONDOWN:
-                    pos = pygame.mouse.get_pos()  # NOTA: em vez de utilizar só a posição do rato utilizar um objeto em queda
+                    pos = pygame.mouse.get_pos()
                     self.start_index = pos[0] // self.spring_width
-                    self.add_heights()
+                    self.add_values()
                     self.start_waves()
 
             self.get_heights()
+            self.get_speeds()
             self.draw_level()
 
             for spring in self.springs:
@@ -71,10 +72,23 @@ class Water:
         for i in range(len(self.springs)):
             self.heights.append(self.springs[i].height - self.target_height)
 
+    def get_speeds(self):
+        self.speeds = []
+        for i in range(len(self.springs)):
+            self.speeds.append(self.springs[i].speed)
+    
     def add_heights(self):
-        self.spring_list()
         for i, height in enumerate(self.heights):
             self.springs[i].height += height
+
+    def add_speeds(self):
+        for i, speed in enumerate(self.speeds):
+            self.springs[i].speed += speed
+
+    def add_values(self): # Creates new list of springs to be drawn
+        self.spring_list()
+        self.add_heights()
+        self.add_speeds()
 
     def start_waves(self):
         self.springs[self.start_index].speed = self.initial_speed
@@ -98,8 +112,8 @@ class Springs:
 
     def hooke_law(self, target_height, tension, dampening):
         self.wave_height = self.height - target_height
-        self.speed += - tension * self.wave_height - self.speed * dampening  # NOTA: diferenciar acelaração e velocidade e calcular a velocidade
-        self.height += self.speed  # NOTA: aqui é aceleração
+        self.speed += - tension * self.wave_height - self.speed * dampening
+        self.height += self.speed
 
     def draw_springs(self, screen):
         pygame.draw.line(screen, WATER_COLOR, (self.x, self.height), (self.x, self.bottom_y), self.spring_width)
@@ -113,6 +127,7 @@ class UpdateControl(Thread):  # Update_Control inherits the functionalities of T
 
         self.target_height = HEIGHT // 2
 
+        # Springs/Waves properties
         self.springs_tension = 0.025
         self.springs_dampening = 0.020
         self.spread_speed = 0.25
