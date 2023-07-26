@@ -61,14 +61,18 @@ class Water:
             pygame.display.flip()
 
     def spring_list(self):
-        new_springs = []
+        # To create the wave iteration, it's needed a list that is
+        # continually updated to cover the new wave's values.
+
+        new_springs = [] # Whenever the method is called the list is reset
         for x in range(self.x_origin, self.x_end, self.spring_width):
             new_springs.append(Springs(x, self.target_height, self.spring_width))
         
         self.springs = list(new_springs)
 
+    # ----- Stores the values of the current wave(s) values ----- 
     def get_heights(self):
-        self.heights = [] # Everytime the method is called the list is reset
+        self.heights = []
         for i in range(len(self.springs)):
             self.heights.append(self.springs[i].height - self.target_height)
 
@@ -76,7 +80,9 @@ class Water:
         self.speeds = []
         for i in range(len(self.springs)):
             self.speeds.append(self.springs[i].speed)
-    
+    # -----------------------------------------------------------
+
+    # ----- Adds the new values ​​so that the list of springs is correctly updated -----
     def add_heights(self):
         for i, height in enumerate(self.heights):
             self.springs[i].height += height
@@ -85,14 +91,15 @@ class Water:
         for i, speed in enumerate(self.speeds):
             self.springs[i].speed += speed
 
-    def add_values(self): # Creates new list of springs to be drawn
+    def add_values(self):
         self.spring_list()
         self.add_heights()
         self.add_speeds()
+    # ----------------------------------------------------------------------------------
 
     def start_waves(self):
         self.springs[self.start_index].speed = self.initial_speed
-        self.updates = UpdateControl(self.springs)
+        self.updates = Update_Control(self.springs)
         self.updates.start()
 
     def draw_level(self):
@@ -120,14 +127,13 @@ class Springs:
 
 
 # Handles all the updates
-class UpdateControl(Thread):  # Update_Control inherits the functionalities of Thread
+class Update_Control(Thread):  # Update_Control inherits the functionalities of Thread
     def __init__(self, springs):
         Thread.__init__(self)  # Iniciates the inherited properties
         self.springs = springs
 
         self.target_height = HEIGHT // 2
 
-        # Springs/Waves properties
         self.springs_tension = 0.025
         self.springs_dampening = 0.020
         self.spread_speed = 0.25
@@ -183,6 +189,9 @@ class UpdateControl(Thread):  # Update_Control inherits the functionalities of T
                 if not int(self.springs[i].speed) and not int(self.springs[i].wave_height):
                     count += 1
             if count == len(self.springs):
+                # For the water to stop more naturally a Thread is created
+                # so it runs simultaneously with the current one
+
                 stop_waves = Thread(target=self.stop)
                 stop_waves.start()
 
