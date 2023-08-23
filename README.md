@@ -1,6 +1,8 @@
 ![banner](wave_simulator_banner.png)
 
-This is a simple `Wave Simulator` written in python.
+**Description**
+---
+This is a simple `Wave Simulator` written in python. It uses Spring calculations to emulate the behavior of water after external force is applied.
 
 **Inpired by**
 ---
