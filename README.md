@@ -14,3 +14,4 @@ This is a simple `Wave Simulator` written in python using spring-like behavior t
 ---
 + Python 3.X.X
 + Pygame
++ OpenGL
