@@ -6,18 +6,14 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 # ----- CONSTANTS -----
-WIDTH = 800
+WIDTH = 900
 HEIGHT = 600
 FPS = 60
-BG_COLOR = (44, 39, 39)
-WATER_COLOR = (0, 106, 255)
 
 target_height = HEIGHT // 2  # Rest height of the water
 
 water_origin = 0
 water_end = WIDTH
-
-pygame.init()
 
 # ----- Main class -----
 class Water:
@@ -31,7 +27,7 @@ class Water:
 
         self.springs = []
 
-        self.spring_num = abs((water_origin - water_end) // 2)  # Calculates the number of springs
+        self.spring_num = abs((water_origin - water_end) // 3)  # Calculates the number of springs
         self.spring_width = (water_origin + water_end) // self.spring_num  # Calculates the width the springs have to be
 
         self.spring_list()
@@ -55,8 +51,8 @@ class Water:
 
             self.get_heights()
             self.get_speeds()
-            self.draw_level() # NOTA: fazer isto funcionar devidamente
 
+            glClearColor(0.173, 0.153, 0.153, 1.0)
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             glLoadIdentity()
             gluOrtho2D(0, WIDTH, HEIGHT, 0)
@@ -110,9 +106,6 @@ class Water:
         self.updates = Update_Control(self.springs)
         self.updates.start()
 
-    def draw_level(self):
-        self.screen.fill(BG_COLOR)
-
 
 # ----- Handles the spring/wave calculations -----
 class Springs:
@@ -135,7 +128,7 @@ class Springs:
         glVertex2d(self.x, self.height) # Top left
         glVertex2d(self.x + self.spring_width, self.height) # Top right
         glVertex2d(self.x, self.bottom_y) # Bottom left
-        glVertex2d(self.x + self.spring_width, self.bottom_y) # Top right
+        glVertex2d(self.x + self.spring_width, self.bottom_y) # Bottom right
         glEnd()
 
 
@@ -180,33 +173,11 @@ class Update_Control(Thread):  # Update_Control inherits the functionalities of 
                     self.springs[i + 1].height += self.rDeltas[i]
     # ------------------------------------------------------------------------
 
-    def stop(self):
-        while self.updating:
-            for i in range(len(self.springs)):
-                self.springs[i].speed = 0
-                self.springs[i].height = target_height
-                self.springs[i].wave_height = 0
-                time.sleep(0.01)
-
-                if i == len(self.springs):
-                    self.updating = False
-
     def run(self):  # run() is one of the property methods inherited by Thread
         while self.updating:
             self.spring_update()
             self.neighbor_list()
             self.neighbor_update()
-            # count = 0
-
-            # for i in range(len(self.springs)):
-            #     if not int(self.springs[i].speed) and not int(self.springs[i].wave_height):
-            #         count += 1
-            # if count == len(self.springs):
-            #     # For the water to stop more "naturally" a Thread is created
-            #     # so it runs simultaneously with the current one
-
-            #     stop_waves = Thread(target=self.stop)
-            #     stop_waves.start()
 
             time.sleep(0.01)
 
