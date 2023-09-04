@@ -2,7 +2,7 @@
 
 **Description**
 ---
-This is a simple `Wave Simulator` written in python using spring-like behavior to emulate the behavior of water after an external force is applied.
+This is a simple `Wave Simulator` written in python using spring-like behavior to emulate water after an external force is applied.
 
 **Inpired by**
 ---
@@ -14,3 +14,4 @@ This is a simple `Wave Simulator` written in python using spring-like behavior t
 ---
 + Python 3.X.X
 + Pygame
++ OpenGL
