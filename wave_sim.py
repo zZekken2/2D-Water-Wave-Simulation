@@ -46,11 +46,10 @@ class Water:
                 if event.type == MOUSEBUTTONDOWN:
                     pos = pygame.mouse.get_pos()
                     self.start_index = pos[0] // self.spring_width
+                    self.get_values()
                     self.add_values()
                     self.start_waves()
 
-            self.get_heights()
-            self.get_speeds()
 
             glClearColor(0.173, 0.153, 0.153, 1.0)
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -59,10 +58,10 @@ class Water:
             glColor3f(0, 0.42, 1)
 
             for spring in self.springs:
-                spring.draw_springs(self.screen)
+                spring.draw_springs()
 
-            pygame.display.flip()
             self.time.tick(FPS)
+            pygame.display.flip()
 
     def spring_list(self):
         # To create the wave iteration, a list is required that is
@@ -74,15 +73,12 @@ class Water:
         
         self.springs = list(new_springs)
 
-    # ----- Stores the values of the current wave ----- 
-    def get_heights(self):
+    # ----- Stores the values of the current wave -----
+    def get_values(self):
         self.heights = []
-        for i in range(len(self.springs)):
-            self.heights.append(self.springs[i].height - target_height)
-
-    def get_speeds(self):
         self.speeds = []
         for i in range(len(self.springs)):
+            self.heights.append(self.springs[i].height - target_height)
             self.speeds.append(self.springs[i].speed)
     # -----------------------------------------------------------
 
@@ -123,7 +119,7 @@ class Springs:
         self.speed += - tension * self.wave_height - self.speed * dampening
         self.height += self.speed
 
-    def draw_springs(self, screen):
+    def draw_springs(self):
         glBegin(GL_QUAD_STRIP)
         glVertex2d(self.x, self.height) # Top left
         glVertex2d(self.x + self.spring_width, self.height) # Top right
@@ -173,11 +169,29 @@ class Update_Control(Thread):  # Update_Control inherits the functionalities of 
                     self.springs[i + 1].height += self.rDeltas[i]
     # ------------------------------------------------------------------------
 
+    def reset_water(self, count):
+            for i in range(len(self.springs)):
+                if not int(self.springs[i].speed) and not int(self.springs[i].wave_height):
+                    count += 1
+            if count == len(self.springs):
+                for i in range(len(self.springs)):
+                    if self.springs[i].height >= target_height + 1 or self.springs[i].height <= target_height + 1:
+                        self.springs[i].speed = 0
+                        self.springs[i].height = target_height
+                        self.springs[i].wave_height = 0
+
+                        if i == len(self.springs)-1:
+                            self.updating = False
+
     def run(self):  # run() is one of the property methods inherited by Thread
         while self.updating:
             self.spring_update()
             self.neighbor_list()
             self.neighbor_update()
+
+            count = 0
+            self.reset_water(count)
+
 
             time.sleep(0.01)
 
