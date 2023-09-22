@@ -32,6 +32,9 @@ class Water:
 
         self.spring_list()
 
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
         self.running = True
         self.run_simulation()
 
@@ -50,12 +53,10 @@ class Water:
                     self.add_values()
                     self.start_waves()
 
-
             glClearColor(0.173, 0.153, 0.153, 1.0)
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             glLoadIdentity()
             gluOrtho2D(0, WIDTH, HEIGHT, 0)
-            glColor3f(0, 0.42, 1)
 
             for spring in self.springs:
                 spring.draw_springs()
@@ -121,10 +122,15 @@ class Springs:
 
     def draw_springs(self):
         glBegin(GL_QUAD_STRIP)
+
+        glColor4f(0, 0.42, 1, 0.8) # Bright Water Color
         glVertex2d(self.x, self.height) # Top left
         glVertex2d(self.x + self.spring_width, self.height) # Top right
+
+        glColor3f(0, 0.165, 0.4) # Dark Water Color
         glVertex2d(self.x, self.bottom_y) # Bottom left
         glVertex2d(self.x + self.spring_width, self.bottom_y) # Bottom right
+
         glEnd()
 
 
@@ -170,18 +176,18 @@ class Update_Control(Thread):  # Update_Control inherits the functionalities of 
     # ------------------------------------------------------------------------
 
     def reset_water(self, count):
+        for i in range(len(self.springs)):
+            if not int(self.springs[i].speed) and not int(self.springs[i].wave_height):
+                count += 1
+        if count == len(self.springs):
             for i in range(len(self.springs)):
-                if not int(self.springs[i].speed) and not int(self.springs[i].wave_height):
-                    count += 1
-            if count == len(self.springs):
-                for i in range(len(self.springs)):
-                    if self.springs[i].height >= target_height + 1 or self.springs[i].height <= target_height + 1:
-                        self.springs[i].speed = 0
-                        self.springs[i].height = target_height
-                        self.springs[i].wave_height = 0
+                if self.springs[i].height >= target_height + 1 or self.springs[i].height <= target_height + 1:
+                    self.springs[i].speed = 0
+                    self.springs[i].height = target_height
+                    self.springs[i].wave_height = 0
 
-                        if i == len(self.springs)-1:
-                            self.updating = False
+                    if i == len(self.springs)-1:
+                        self.updating = False
 
     def run(self):  # run() is one of the property methods inherited by Thread
         while self.updating:
